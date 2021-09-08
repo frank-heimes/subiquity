@@ -46,7 +46,7 @@ class SystemSetupServer(SubiquityServer):
         "WSLConfigurationAdvanced",
         "Configure",
         "Late",
-        "SetupShutdown",
+        "Shutdown",
     ]
 
     supported_variants = ["wsl_setup", "wsl_configuration"]

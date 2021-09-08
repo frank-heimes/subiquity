@@ -22,7 +22,7 @@ from subiquity.server.controllers import ShutdownController
 log = logging.getLogger("system_setup.controllers.restart")
 
 
-class SetupShutdownController(ShutdownController):
+class ShutdownController(ShutdownController):
 
     def __init__(self, app):
         # This isn't the most beautiful way, but the shutdown controller

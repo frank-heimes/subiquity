@@ -25,7 +25,7 @@ from .identity import IdentityController
 from .wslconfbase import WSLConfigurationBaseController
 from .wslconfadvanced import WSLConfigurationAdvancedController
 from .configure import ConfigureController
-from .shutdown import SetupShutdownController
+from .shutdown import ShutdownController
 
 __all__ = [
     'EarlyController',
@@ -34,7 +34,7 @@ __all__ = [
     'LateController',
     'LocaleController',
     'ReportingController',
-    'SetupShutdownController',
+    'ShutdownController',
     'UserdataController',
     'WSLConfigurationBaseController',
     'WSLConfigurationAdvancedController',
