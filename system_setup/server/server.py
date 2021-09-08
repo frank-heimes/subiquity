@@ -38,6 +38,7 @@ class SystemSetupServer(SubiquityServer):
 
     from system_setup.server import controllers as controllers_mod
     controllers = [
+        "Early",
         "Reporting",
         "Error",
         "Locale",
