@@ -44,6 +44,7 @@ from subiquitycore.ssh import (
 from subiquitycore.utils import (
     arun_command,
     run_command,
+    fallback_server_state_file,
     set_systemd_run_path,
 )
 
@@ -303,6 +304,10 @@ class SubiquityServer(Application):
             if path:
                 set_systemd_run_path(path)
 
+        # This fallback is used for non systemd system,
+        # which don’t have journald
+        self.fallback_server_state = fallback_server_state_file(opts.dry_run)
+
     def load_serialized_state(self):
         for controller in self.controllers.instances:
             controller.load_state()
@@ -356,6 +361,9 @@ class SubiquityServer(Application):
 
     def update_state(self, state):
         self._state = state
+        if self.fallback_server_state is not None:
+            with open(self.fallback_server_state, 'w') as fallback_fd:
+                fallback_fd.write(state.name)
         self.state_event.set()
         self.state_event.clear()
 

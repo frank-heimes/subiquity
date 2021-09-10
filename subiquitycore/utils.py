@@ -156,3 +156,17 @@ def set_systemd_run_path(path):
 def has_booted_under_systemd():
     """ Returns true if systemd is supported """
     return os.path.exists(systemd_run_path)
+
+
+def fallback_server_state_file(dry_run):
+    """ Returns the path to a fallback server state if used
+
+        Returns None if we are running under systemd, as events are passed via
+        the journal, otherwise, pass the file used to reflect last server state
+    """
+    fallback_server_state = None
+    if not has_booted_under_systemd():
+        fallback_server_state = "/run/subiquity/server_state"
+        if dry_run:
+            fallback_server_state = ".subiquity/server_state"
+    return fallback_server_state

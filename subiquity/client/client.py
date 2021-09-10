@@ -47,7 +47,10 @@ from subiquity.common.types import (
     ErrorReportKind,
     ErrorReportRef,
     )
-from subiquitycore.utils import set_systemd_run_path
+from subiquitycore.utils import (
+    fallback_server_state_file,
+    set_systemd_run_path,
+)
 from subiquity.journald import journald_listen
 from subiquity.ui.frame import SubiquityUI
 from subiquity.ui.views.error import ErrorReportStretchy
@@ -147,6 +150,10 @@ class SubiquityClient(TuiApplication):
             path = os.getenv("DRY_RUN_SYSTEMD_RUN_PATH")
             if path:
                 set_systemd_run_path(path)
+
+        # This fallback is used for non systemd system,
+        # which don’t have journald
+        self.fallback_server_state = fallback_server_state_file(opts.dry_run)
 
     async def _restart_server(self):
         log.debug("_restart_server")
@@ -250,10 +257,21 @@ class SubiquityClient(TuiApplication):
                 print("An error occurred. Press enter to start a shell")
                 await run_in_thread(input)
                 os.execvp("/bin/bash", ["/bin/bash"])
+            # We are not running under systemd, and consequently, we don’t have
+            # the journal sending subiquity_event_noninteractive events.
+            # Quitting then here once we are done.
+            elif (app_state == ApplicationState.DONE
+                  and self.fallback_server_state):
+                self.exit()
             try:
                 app_status = await self.client.meta.status.GET(
                     cur=app_state)
             except aiohttp.ClientError:
+                # Fallback to file state if exists
+                # (case of server already shutdown and no systemd for instance)
+                state = self.get_fallback_server_state()
+                if state:
+                    app_status.state = state
                 await asyncio.sleep(1)
                 continue
 
@@ -307,7 +325,15 @@ class SubiquityClient(TuiApplication):
                 self.client.meta.status.GET(cur=status.state))
         if status.state == ApplicationState.EARLY_COMMANDS:
             print("running early commands")
-            status = await self.client.meta.status.GET(cur=status.state)
+            try:
+                status = await self.client.meta.status.GET(cur=status.state)
+            except aiohttp.client_exceptions.ServerDisconnectedError:
+                # check if the process was already done on non systemd systems
+                # (early commands are blocking there and then, the server is
+                # already shutdown)
+                state = self.get_fallback_server_state()
+                if state:
+                    status.state = state
             await asyncio.sleep(0.5)
         return status
 
@@ -544,3 +570,13 @@ class SubiquityClient(TuiApplication):
                 # Don't show an error if already looking at one.
                 return
         self.add_global_overlay(ErrorReportStretchy(self, error_ref))
+
+    def get_fallback_server_state(self):
+        """ Returns fallback server state if presents.
+
+            Returns otherwise None."""
+        if (self.fallback_server_state
+                and os.path.exists(self.fallback_server_state)):
+            with open(self.fallback_server_state, 'r') as fallback_fd:
+                return ApplicationState[fallback_fd.read()]
+        return None
