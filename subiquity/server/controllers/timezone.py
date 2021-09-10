@@ -19,14 +19,15 @@ import subprocess
 from subiquity.common.apidef import API
 from subiquity.common.types import TimeZoneInfo
 from subiquity.server.controller import SubiquityController
+from subiquitycore.utils import has_booted_under_systemd
+
 from shutil import which
-import os
 
 log = logging.getLogger('subiquity.server.controllers.timezone')
 
 
 def active_timedatectl():
-    return which('timedatectl') and os.path.exists('/run/systemd/system')
+    return which('timedatectl') and has_booted_under_systemd()
 
 
 def generate_possible_tzs():

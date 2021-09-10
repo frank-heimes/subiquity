@@ -19,7 +19,7 @@ import os
 from systemd import journal
 
 from subiquitycore.context import with_context
-from subiquitycore.utils import arun_command
+from subiquitycore.utils import arun_command, has_booted_under_systemd
 
 from subiquity.common.types import ApplicationState
 from subiquity.server.controller import NonInteractiveController
@@ -63,10 +63,11 @@ class CmdListController(NonInteractiveController):
                 if self.syslog_id is not None:
                     journal.send(
                         "  running " + desc, SYSLOG_IDENTIFIER=self.syslog_id)
-                    cmd = [
-                        'systemd-cat', '--level-prefix=false',
-                        '--identifier=' + self.syslog_id,
-                        ] + cmd
+                    if has_booted_under_systemd():
+                        cmd = [
+                            'systemd-cat', '--level-prefix=false',
+                            '--identifier=' + self.syslog_id,
+                            ] + cmd
                 await arun_command(
                     cmd, env=env,
                     stdin=None, stdout=None, stderr=None,

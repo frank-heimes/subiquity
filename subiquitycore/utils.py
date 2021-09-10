@@ -22,6 +22,8 @@ import subprocess
 
 log = logging.getLogger("subiquitycore.utils")
 
+systemd_run_path = '/run/systemd/system'
+
 
 def _clean_env(env):
     if env is None:
@@ -143,3 +145,14 @@ def disable_subiquity():
                  "snap.subiquity.subiquity-service.service",
                  "serial-subiquity@*.service"])
     return
+
+
+def set_systemd_run_path(path):
+    """ Set the systemd-run path to mock systems without systemd as init """
+    global systemd_run_path
+    systemd_run_path = path
+
+
+def has_booted_under_systemd():
+    """ Returns true if systemd is supported """
+    return os.path.exists(systemd_run_path)

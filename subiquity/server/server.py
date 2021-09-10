@@ -41,7 +41,11 @@ from subiquitycore.ssh import (
     host_key_fingerprints,
     user_key_fingerprints,
     )
-from subiquitycore.utils import arun_command, run_command
+from subiquitycore.utils import (
+    arun_command,
+    run_command,
+    set_systemd_run_path,
+)
 
 from subiquity.common.api.server import (
     bind,
@@ -293,6 +297,11 @@ class SubiquityServer(Application):
         self.hub.subscribe(InstallerChannels.NETWORK_PROXY_SET,
                            self._proxy_set)
         self.geoip = GeoIP(self)
+
+        if opts.dry_run:
+            path = os.getenv("DRY_RUN_SYSTEMD_RUN_PATH")
+            if path:
+                set_systemd_run_path(path)
 
     def load_serialized_state(self):
         for controller in self.controllers.instances:

@@ -47,6 +47,7 @@ from subiquity.common.types import (
     ErrorReportKind,
     ErrorReportRef,
     )
+from subiquitycore.utils import set_systemd_run_path
 from subiquity.journald import journald_listen
 from subiquity.ui.frame import SubiquityUI
 from subiquity.ui.views.error import ErrorReportStretchy
@@ -141,6 +142,11 @@ class SubiquityClient(TuiApplication):
 
         self.note_data_for_apport("SnapUpdated", str(self.updated))
         self.note_data_for_apport("UsingAnswers", str(bool(self.answers)))
+
+        if opts.dry_run:
+            path = os.getenv("DRY_RUN_SYSTEMD_RUN_PATH")
+            if path:
+                set_systemd_run_path(path)
 
     async def _restart_server(self):
         log.debug("_restart_server")
