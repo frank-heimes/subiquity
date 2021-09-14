@@ -36,6 +36,7 @@ class ConfigureController(SubiquityController):
 
     def __init__(self, app):
         super().__init__(app)
+        self.app = app
         self.model = app.base_model
 
     def start(self):
@@ -71,7 +72,7 @@ class ConfigureController(SubiquityController):
 
             self.app.update_state(ApplicationState.POST_RUNNING)
 
-            variant = self.model.client_variant
+            variant = self.app.variant
             if variant == "wsl_setup":
                 wsl_identity = self.model.identity
                 run_command(["/usr/sbin/useradd", "-m", "-s", "/bin/bash",
