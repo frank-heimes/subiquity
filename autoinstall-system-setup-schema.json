@@ -88,18 +88,6 @@
         "wslconfadvanced": {
             "type": "object",
             "properties": {
-                "custom_path": {
-                    "type": "string"
-                },
-                "custom_mount_opt": {
-                    "type": "string"
-                },
-                "gen_host": {
-                    "type": "boolean"
-                },
-                "gen_resolvconf": {
-                    "type": "boolean"
-                },
                 "interop_enabled": {
                     "type": "boolean"
                 },
