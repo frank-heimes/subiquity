@@ -24,6 +24,8 @@ from subiquity.common.apidef import API
 from subiquity.common.types import WSLConfigurationAdvanced
 from subiquity.server.controller import SubiquityController
 
+from system_setup.common.helpers import config_ref
+
 log = logging.getLogger(
     'subiquity.server.controllers.wsl_configuration_advanced')
 
@@ -56,41 +58,6 @@ class WSLConfigurationAdvancedController(SubiquityController):
         'additionalProperties': False,
     }
 
-    # this is a temporary simplified reference. The future complete reference
-    # should use the default.json in `ubuntu-wsl-integration`.
-    config_ref = {
-        "wsl": {
-            "automount": {
-                "enabled": "automount",
-                "mountfstab": "mountfstab",
-                "root": "custom_path",
-                "options": "custom_mount_opt",
-            },
-            "network": {
-                "generatehosts": "gen_host",
-                "generateresolvconf": "gen_resolvconf",
-            },
-            "interop": {
-                "enabled": "interop_enabled",
-                "appendwindowspath": "interop_appendwindowspath",
-            }
-        },
-        "ubuntu": {
-            "GUI": {
-                "theme": "gui_theme",
-                "followwintheme": "gui_followwintheme",
-            },
-            "Interop": {
-                "guiintegration": "legacy_gui",
-                "audiointegration": "legacy_audio",
-                "advancedipdetection": "adv_ip_detect",
-            },
-            "Motd": {
-                "wslnewsenabled": "wsl_motd_news",
-            }
-        }
-    }
-
     def __init__(self, app):
         super().__init__(app)
 
@@ -100,11 +67,11 @@ class WSLConfigurationAdvancedController(SubiquityController):
             wslconfig = configparser.ConfigParser()
             wslconfig.read('/etc/wsl.conf')
             for a in wslconfig:
-                if a in self.config_ref['wsl']:
+                if a in config_ref['wsl']:
                     a_x = wslconfig[a]
                     for b in a_x:
-                        if b in self.config_ref['wsl'][a]:
-                            data[self.config_ref['wsl'][a][b]] = a_x[b]
+                        if b in config_ref['wsl'][a]:
+                            data[config_ref['wsl'][a][b]] = a_x[b]
         if path.exists('/etc/ubuntu-wsl.conf'):
             ubuntuconfig = configparser.ConfigParser()
             ubuntuconfig.read('/etc/ubuntu-wsl.conf')
@@ -112,16 +79,12 @@ class WSLConfigurationAdvancedController(SubiquityController):
                 if a in self.config_ref['ubuntu']:
                     a_x = ubuntuconfig[a]
                     for b in a_x:
-                        if b in self.config_ref['ubuntu'][a]:
-                            data[self.config_ref['ubuntu'][a][b]] = a_x[b]
+                        if b in config_ref['ubuntu'][a]:
+                            data[config_ref['ubuntu'][a][b]] = a_x[b]
         if data:
             def bool_converter(x):
                 return x == 'true'
             reconf_data = WSLConfigurationAdvanced(
-                custom_path=data['custom_path'],
-                custom_mount_opt=data['custom_mount_opt'],
-                gen_host=bool_converter(data['gen_host']),
-                gen_resolvconf=bool_converter(data['gen_resolvconf']),
                 interop_enabled=bool_converter(data['interop_enabled']),
                 interop_appendwindowspath=bool_converter(
                     data['interop_appendwindowspath']),

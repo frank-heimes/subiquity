@@ -13,7 +13,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import configparser
 import logging
+from os import path
 
 import attr
 
@@ -22,6 +24,8 @@ from subiquitycore.context import with_context
 from subiquity.common.apidef import API
 from subiquity.common.types import WSLConfigurationBase
 from subiquity.server.controller import SubiquityController
+
+from system_setup.common.helpers import config_ref
 
 log = logging.getLogger('subiquity.server.controllers.wsl_configuration_base')
 
@@ -42,6 +46,32 @@ class WSLConfigurationBaseController(SubiquityController):
         'required': [],
         'additionalProperties': False,
         }
+
+    def __init__(self, app):
+        super().__init__(app)
+
+        # load the config file
+        data = {}
+
+        if path.exists('/etc/wsl.conf'):
+            wslconfig = configparser.ConfigParser()
+            wslconfig.read('/etc/wsl.conf')
+            for a in wslconfig:
+                if a in config_ref['wsl']:
+                    a_x = wslconfig[a]
+                    for b in a_x:
+                        if b in config_ref['wsl'][a]:
+                            data[config_ref['wsl'][a][b]] = a_x[b]
+        if data:
+            def bool_converter(x):
+                return x == 'true'
+            conf_data = WSLConfigurationBase(
+                custom_path=data['custom_path'],
+                custom_mount_opt=data['custom_mount_opt'],
+                gen_host=bool_converter(data['gen_host']),
+                gen_resolvconf=bool_converter(data['gen_resolvconf']),
+            )
+            self.model.apply_settings(conf_data, self.opts.dry_run)
 
     def load_autoinstall_data(self, data):
         if data is not None:
