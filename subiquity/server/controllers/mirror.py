@@ -22,6 +22,7 @@ from subiquitycore.context import with_context
 
 from subiquity.common.apidef import API
 from subiquity.server.controller import SubiquityController
+from subiquity.server.types import InstallerChannels
 
 log = logging.getLogger('subiquity.server.controllers.mirror')
 
@@ -45,7 +46,7 @@ class MirrorController(SubiquityController):
     def __init__(self, app):
         super().__init__(app)
         self.geoip_enabled = True
-        self.app.geoip.on_countrycode.subscribe(self.on_countrycode)
+        self.app.hub.subscribe(InstallerChannels.GEOIP, self.on_geoip)
         self.cc_event = asyncio.Event()
 
     def load_autoinstall_data(self, data):
@@ -65,9 +66,9 @@ class MirrorController(SubiquityController):
         except asyncio.TimeoutError:
             pass
 
-    def on_countrycode(self, cc):
+    def on_geoip(self):
         if self.geoip_enabled:
-            self.model.set_country(cc)
+            self.model.set_country(self.app.geoip.countrycode)
         self.cc_event.set()
 
     def serialize(self):

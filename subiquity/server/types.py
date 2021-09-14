@@ -13,14 +13,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio
-import random
-import string
+from subiquitycore.pubsub import CoreChannels
 
 
-def run_coro(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
-
-
-def random_string():
-    return ''.join(random.choice(string.ascii_letters) for _ in range(8))
+class InstallerChannels(CoreChannels):
+    NETWORK_PROXY_SET = 'network-proxy-set'
+    SNAPD_NETWORK_CHANGE = 'snapd-network-change'
+    GEOIP = 'geoip'

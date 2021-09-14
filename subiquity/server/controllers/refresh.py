@@ -33,6 +33,7 @@ from subiquity.common.types import (
 from subiquity.server.controller import (
     SubiquityController,
     )
+from subiquity.server.types import InstallerChannels
 
 
 log = logging.getLogger('subiquity.server.controllers.refresh')
@@ -59,8 +60,8 @@ class RefreshController(SubiquityController):
         self.configure_task = None
         self.check_task = None
         self.status = RefreshStatus(availability=RefreshCheckState.UNKNOWN)
-        self.app.hub.subscribe(
-            'snapd-network-change', self.snapd_network_changed)
+        self.app.hub.subscribe(InstallerChannels.SNAPD_NETWORK_CHANGE,
+                               self.snapd_network_changed)
 
     def load_autoinstall_data(self, data):
         if data is not None:

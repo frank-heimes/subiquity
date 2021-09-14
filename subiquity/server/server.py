@@ -68,6 +68,7 @@ from subiquity.models.subiquity import (
 from subiquity.server.controller import SubiquityController
 from subiquity.server.geoip import GeoIP
 from subiquity.server.errors import ErrorController
+from subiquity.server.types import InstallerChannels
 from subiquitycore.snapd import (
     AsyncSnapd,
     FakeSnapdConnection,
@@ -115,7 +116,13 @@ class MetaController:
     async def client_variant_POST(self, variant: str) -> None:
         if variant not in self.app.supported_variants:
             raise ValueError(f'unrecognized client variant {variant}')
-        self.app.base_model.set_source_variant(variant)
+        from subiquity.models.source import fake_entries
+        if variant in fake_entries:
+            if self.app.base_model.source.current.variant != variant:
+                self.app.base_model.source.current = fake_entries[variant]
+            self.app.controllers.Source.configured()
+        else:
+            self.app.base_model.set_source_variant(variant)
 
     async def client_variant_GET(self) -> str:
         return self.app.base_model.client_variant
@@ -172,6 +179,7 @@ INSTALL_MODEL_NAMES = ModelNames({
     "mirror",
     "network",
     "proxy",
+    "source",
     })
 
 POSTINSTALL_MODEL_NAMES = ModelNames({
@@ -216,6 +224,7 @@ class SubiquityServer(Application):
         "Kernel",
         "Keyboard",
         "Zdev",
+        "Source",
         "Network",
         "Proxy",
         "Mirror",
@@ -279,19 +288,13 @@ class SubiquityServer(Application):
             self.snapd = AsyncSnapd(connection)
         else:
             log.info("no snapd socket found. Snap support is disabled")
-            reload_needed = False
-            for controller in ["Refresh", "Snaplist"]:
-                if controller in self.controllers.controller_names:
-                    self.controllers.controller_names.remove(controller)
-                    reload_needed = True
-            if reload_needed:
-                self.controllers.load_all()
             self.snapd = None
         self.note_data_for_apport("SnapUpdated", str(self.updated))
         self.event_listeners = []
         self.autoinstall_config = None
-        self.hub.subscribe('network-up', self._network_change)
-        self.hub.subscribe('network-proxy-set', self._proxy_set)
+        self.hub.subscribe(InstallerChannels.NETWORK_UP, self._network_change)
+        self.hub.subscribe(InstallerChannels.NETWORK_PROXY_SET,
+                           self._proxy_set)
         self.geoip = GeoIP(self)
 
     def load_serialized_state(self):
@@ -432,7 +435,9 @@ class SubiquityServer(Application):
 
     def load_autoinstall_config(self, *, only_early):
         log.debug("load_autoinstall_config only_early %s", only_early)
-        if self.opts.autoinstall is None:
+        if not self.opts.autoinstall:
+            # autoinstall is None -> no autoinstall file supplied or found
+            # autoinstall is empty -> explicitly disabling autoinstall
             return
         with open(self.opts.autoinstall) as fp:
             self.autoinstall_config = yaml.safe_load(fp)
@@ -484,16 +489,17 @@ class SubiquityServer(Application):
             init.read_cfg()
             init.fetch(existing="trust")
             self.cloud = init.cloudify()
-            autoinstall_path = '/autoinstall.yaml'
-            if 'autoinstall' in self.cloud.cfg:
-                if not os.path.exists(autoinstall_path):
-                    atomic_helper.write_file(
-                        autoinstall_path,
-                        safeyaml.dumps(
-                            self.cloud.cfg['autoinstall']).encode('utf-8'),
-                        mode=0o600)
-            if os.path.exists(autoinstall_path):
-                self.opts.autoinstall = autoinstall_path
+            if self.opts.autoinstall is None:
+                autoinstall_path = '/autoinstall.yaml'
+                if 'autoinstall' in self.cloud.cfg:
+                    if not os.path.exists(autoinstall_path):
+                        atomic_helper.write_file(
+                            autoinstall_path,
+                            safeyaml.dumps(
+                                self.cloud.cfg['autoinstall']).encode('utf-8'),
+                            mode=0o600)
+                if os.path.exists(autoinstall_path):
+                    self.opts.autoinstall = autoinstall_path
         else:
             log.debug(
                 "cloud-init status: %r, assumed disabled",
@@ -590,14 +596,14 @@ class SubiquityServer(Application):
     def _network_change(self):
         if not self.snapd:
             return
-        self.hub.broadcast('snapd-network-change')
+        self.hub.broadcast(InstallerChannels.SNAPD_NETWORK_CHANGE)
 
     async def _proxy_set(self):
         if not self.snapd:
             return
         await run_in_thread(
             self.snapd.connection.configure_proxy, self.base_model.proxy)
-        self.hub.broadcast('snapd-network-change')
+        self.hub.broadcast(InstallerChannels.SNAPD_NETWORK_CHANGE)
 
     def restart(self):
         if not self.snapd:

@@ -48,10 +48,6 @@ class WSLConfigurationAdvancedModel(object):
         d = {}
         # TODO: placholder settings; should be dynamically assgined using
         # ubuntu-wsl-integration
-        d['custom_path'] = result.custom_path
-        d['custom_mount_opt'] = result.custom_mount_opt
-        d['gen_host'] = result.gen_host
-        d['gen_resolvconf'] = result.gen_resolvconf
         d['interop_enabled'] = result.interop_enabled
         d['interop_appendwindowspath'] = result.interop_appendwindowspath
         d['gui_theme'] = result.gui_theme

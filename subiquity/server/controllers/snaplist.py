@@ -35,6 +35,7 @@ from subiquity.common.types import (
 from subiquity.server.controller import (
     SubiquityController,
     )
+from subiquity.server.types import InstallerChannels
 
 
 log = logging.getLogger('subiquity.server.controllers.snaplist')
@@ -138,8 +139,8 @@ class SnapListController(SubiquityController):
     def __init__(self, app):
         super().__init__(app)
         self.loader = self._make_loader()
-        self.app.hub.subscribe(
-            'snapd-network-change', self.snapd_network_changed)
+        self.app.hub.subscribe(InstallerChannels.SNAPD_NETWORK_CHANGE,
+                               self.snapd_network_changed)
 
     def load_autoinstall_data(self, ai_data):
         to_install = []

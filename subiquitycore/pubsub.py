@@ -17,6 +17,10 @@ import asyncio
 import inspect
 
 
+class CoreChannels:
+    NETWORK_UP = 'network-up'
+
+
 class MessageHub:
 
     def __init__(self):
@@ -33,21 +37,3 @@ class MessageHub:
 
     def broadcast(self, channel):
         return asyncio.get_event_loop().create_task(self.abroadcast(channel))
-
-
-class EventCallback:
-
-    def __init__(self):
-        self.subscriptions = []
-
-    def subscribe(self, method, *args):
-        self.subscriptions.append((method, args))
-
-    async def abroadcast(self, cbdata):
-        for m, args in self.subscriptions:
-            v = m(cbdata, *args)
-            if inspect.iscoroutine(v):
-                await v
-
-    def broadcast(self, cbdata):
-        return asyncio.get_event_loop().create_task(self.abroadcast(cbdata))

@@ -30,7 +30,6 @@ log = logging.getLogger(
     'subiquity.server.controllers.wsl_configuration_advanced')
 
 
-# TODO WSL: remove all duplicates from WSL config base controller
 class WSLConfigurationAdvancedController(SubiquityController):
 
     endpoint = API.wslconfadvanced
@@ -39,10 +38,6 @@ class WSLConfigurationAdvancedController(SubiquityController):
     autoinstall_schema = {
         'type': 'object',
         'properties': {
-            'custom_path': {'type': 'string'},
-            'custom_mount_opt': {'type': 'string'},
-            'gen_host': {'type': 'boolean'},
-            'gen_resolvconf': {'type': 'boolean'},
             'interop_enabled': {'type': 'boolean'},
             'interop_appendwindowspath': {'type': 'boolean'},
             'gui_theme': {'type': 'string'},
@@ -102,10 +97,6 @@ class WSLConfigurationAdvancedController(SubiquityController):
     def load_autoinstall_data(self, data):
         if data is not None:
             reconf_data = WSLConfigurationAdvanced(
-                custom_path=data['custom_path'],
-                custom_mount_opt=data['custom_mount_opt'],
-                gen_host=data['gen_host'],
-                gen_resolvconf=data['gen_resolvconf'],
                 interop_enabled=data['interop_enabled'],
                 interop_appendwindowspath=data['interop_appendwindowspath'],
                 gui_theme=data['gui_theme'],
@@ -130,10 +121,6 @@ class WSLConfigurationAdvancedController(SubiquityController):
     async def GET(self) -> WSLConfigurationAdvanced:
         data = WSLConfigurationAdvanced()
         if self.model.wslconfadvanced is not None:
-            data.custom_path = self.model.wslconfadvanced.custom_path
-            data.custom_mount_opt = self.model.wslconfadvanced.custom_mount_opt
-            data.gen_host = self.model.wslconfadvanced.gen_host
-            data.gen_resolvconf = self.model.wslconfadvanced.gen_resolvconf
             data.interop_enabled = self.model.wslconfadvanced.interop_enabled
             data.interop_appendwindowspath = \
                 self.model.wslconfadvanced.interop_appendwindowspath

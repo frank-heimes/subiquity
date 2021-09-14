@@ -41,7 +41,11 @@ def make_server_args_parser():
     parser.add_argument('--bootloader',
                         choices=['none', 'bios', 'prep', 'uefi'],
                         help='Override style of bootloader to use')
-    parser.add_argument('--autoinstall', action='store')
+    parser.add_argument(
+        '--autoinstall', action='store',
+        help=('Path to autoinstall file. Empty value disables autoinstall. '
+              'By default tries to load /autoinstall.yaml, '
+              'or autoinstall data from cloud-init.'))
     with open('/proc/cmdline') as fp:
         cmdline = fp.read()
     parser.add_argument('--kernel-cmdline', action='store', default=cmdline)
@@ -61,6 +65,8 @@ def make_server_args_parser():
         '--snap-section', action='store', default='server',
         help=("Show snaps from this section of the store in the snap "
               "list screen."))
+    parser.add_argument(
+        '--source-catalog', dest='source_catalog', action='store')
     return parser
 
 
