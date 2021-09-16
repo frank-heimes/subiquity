@@ -332,8 +332,9 @@ class SubiquityClient(TuiApplication):
                 # (early commands are blocking there and then, the server is
                 # already shutdown)
                 state = self.get_fallback_server_state()
-                if state:
-                    status.state = state
+                if not state:
+                    raise  # re-raise when state is unknown
+                status.state = state
             await asyncio.sleep(0.5)
         return status
 
