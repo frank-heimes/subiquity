@@ -21,7 +21,7 @@ from subiquity.server.controllers.userdata import UserdataController
 
 from .configure import ConfigureController
 from .identity import IdentityController
-from .locale import LocaleController
+from .locale import WSLLocaleController
 from .shutdown import SetupShutdownController
 from .wslconfadvanced import WSLConfigurationAdvancedController
 from .wslconfbase import WSLConfigurationBaseController
@@ -31,7 +31,7 @@ __all__ = [
     'ErrorController',
     'IdentityController',
     'LateController',
-    'LocaleController',
+    'WSLLocaleController',
     'ReportingController',
     'SetupShutdownController',
     'UserdataController',

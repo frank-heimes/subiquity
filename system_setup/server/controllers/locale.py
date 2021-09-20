@@ -14,16 +14,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from system_setup.common.helpers import get_windows_locale
+from system_setup.common.wsl_utils import get_windows_locale
 from subiquity.server.controllers.locale import LocaleController
 
 
-class LocaleController(LocaleController):
+class WSLLocaleController(LocaleController):
 
     def start(self):
         win_lang = get_windows_locale()
         self.model.selected_language = os.environ.get("LANG") \
             or self.autoinstall_default
-        if win_lang is not None:
+        if win_lang:
             self.model.selected_language = win_lang + ".UTF-8"
-        self.configured()
+        self.app.aio_loop.create_task(self.configured())
