@@ -13,19 +13,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from subiquity.server.controllers.cmdlist import (
-    EarlyController,
-    LateController,
-    ErrorController,
-    )
-from subiquity.server.controllers.locale import LocaleController
+from subiquity.server.controllers.cmdlist import (EarlyController,
+                                                  ErrorController,
+                                                  LateController)
 from subiquity.server.controllers.reporting import ReportingController
 from subiquity.server.controllers.userdata import UserdataController
-from .identity import IdentityController
-from .wslconfbase import WSLConfigurationBaseController
-from .wslconfadvanced import WSLConfigurationAdvancedController
+
 from .configure import ConfigureController
+from .identity import IdentityController
+from .locale import LocaleController
 from .shutdown import SetupShutdownController
+from .wslconfadvanced import WSLConfigurationAdvancedController
+from .wslconfbase import WSLConfigurationBaseController
 
 __all__ = [
     'EarlyController',
